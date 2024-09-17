@@ -2,23 +2,19 @@ from tkinter import *
 from numpy import floor
 from tkinter import ttk
 import json
-
-#Modifica el ComprobarLimite() porque no es del todo util
+import matplotlib.pyplot as pl
+#self.Ventana.after(2000, self.Inicio) Este comando hace que dentro de 2000 milisegundos(2 segundos) se llame a inicio
 #_____________________________________________________________________________________________________________________
 #El proyecto se encuentra terminado pero podrias agregar las siguientes modificaciones para probar tus habilidades
 #Funcionalidades relacionadas con los sobres:
-#
-#Editar sobres: Permitir al usuario modificar el nombre, porcentaje o saldo de un sobre existente.
-#Eliminar sobres: Dar la opción de eliminar sobres que ya no se necesiten.
+
 #Transferencias entre sobres: Implementar la posibilidad de transferir dinero de un sobre a otro.
-#Metas de ahorro: Permitir al usuario establecer metas de ahorro para cada sobre y mostrar el progreso hacia esas metas.
-#Categorías de sobres: Organizar los sobres en categorías (por ejemplo, "Gastos", "Ahorro", "Inversiones") para una mejor gestión.
 #Funcionalidades de visualización y análisis:
-#
+
 #Gráficos y visualizaciones: Mostrar gráficos o visualizaciones que representen el saldo de los sobres, el historial de transacciones, etc., para una mejor comprensión de las finanzas.
 #Reportes: Generar reportes periódicos o personalizados que resuman la actividad de los sobres y proporcionen información útil para el análisis financiero.
 #Otras funcionalidades:
-#
+
 #Importación/exportación de datos: Permitir al usuario importar o exportar datos de los sobres en diferentes formatos (por ejemplo, CSV, Excel) para facilitar la integración con otras herramientas o el análisis de datos.
 #Seguridad: Implementar medidas de seguridad, como contraseñas o autenticación de dos factores, para proteger la información financiera del usuario.
 #Notificaciones: Enviar notificaciones al usuario sobre transacciones, cambios en los saldos de los sobres, etc.
@@ -34,49 +30,193 @@ class Banco:
         for i in range(11):
             Ventana.grid_columnconfigure(i,weight=1)
             Ventana.grid_rowconfigure(i,weight=1)
-
         #Creamos los botones siempre dentro del init
+
+    #iNICIO DE PROGRAMA
     def Inicio(self):
         self.EliminarWidgets()
-        self.MenuOp1= ttk.Button(text="Ingresar",command=lambda:self.SumatoriaInicio())
+        self.MenuOp1= ttk.Button(text="Ingresar",command=lambda:self.MostrarElPedidor())
         self.MenuOp1.grid(column=3,row=0)
         self.MenuOp2= ttk.Button(text="Retirar",command=lambda:self.RetirarInicio())
         self.MenuOp2.grid(column=6,row=0)
         self.MenuOp3= ttk.Button(text="Balance",command=lambda:self.Balance())
         self.MenuOp3.grid(column=3,row=2)
-        self.MenuOp4= ttk.Button(text="Crear Sobre",command=lambda:self.agregarSobreMain())
+        self.MenuOp4= ttk.Button(text="Opciones de Sobres",command=lambda:self.OpcionesDeSobres())
         self.MenuOp4.grid(column=6,row=2)
-        self.MenuOp5= ttk.Button(text="Terminar",command=lambda:self.Ventana.quit())
-        self.MenuOp5.grid(column=5,row=3)
+        self.MenuOp5 = ttk.Button(text="Representacion",command=lambda:self.PedidorDeDatosParaVizualizar())
+        self.MenuOp5.grid(column=3,row=3)
+        self.MenuOp6= ttk.Button(text="Terminar",command=lambda:self.Ventana.quit())
+        self.MenuOp6.grid(column=6,row=3)
 
-    def EliminarWidgets(self):
-        for widget in self.Ventana.winfo_children():
-            widget.destroy()
-
-    def agregarSobre(self):
-        sobre=self.NombreSobre.get()
-        sobre = sobre.capitalize()
-        porcentaje = self.PorcentajeSobre.get()
-        porcentaje=int(porcentaje)
-        limite = self.LimiteSobre.get()
-        saldo = 0
-        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
-            Datos = json.load(file)
-        Json={
-            "Nombre": sobre,
-            "Porcentaje" : porcentaje,
-            "Saldo": saldo,
-            "Limite":limite
-        }
-        Datos.append(Json)
-        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
-            json.dump(Datos,file,indent=4)
+    #BOTON 1 (Ingresar)
+    def MostrarElPedidor(self):
+        Divisas= [1000, 2000, 5000, 10000, 20000]
         self.EliminarWidgets()
-        Label(self.Ventana,text=f"Sobre {sobre.lower()} fue creado con exito").grid(columnspan=10,row=2)
+        self.Mostrar = Label(self.Ventana,text=f"Agrega la cantidad de billetes de {Divisas[self.i]}: ")
+        self.Mostrar.grid(columnspan=10,row=0)
+
+        self.entradaDinero = Entry(self.Ventana)
+        self.entradaDinero.grid(columnspan=10,row=2)
+
+        self.Boton = ttk.Button(self.Ventana,text="Aceptar", command=lambda:self.ObtencionDeLaCantidad(Divisas=Divisas))
+        self.Boton.grid(columnspan=10,row=3)
+
         self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
         self.Salida.grid(column=11,row= 0) 
 
-    def agregarSobreMain(self):
+    def ObtencionDeLaCantidad(self,Divisas):
+        TotalDe = self.entradaDinero.get()
+        TotalDe = int(TotalDe)
+        Fin = TotalDe * Divisas[self.i]
+        self.Dinero += Fin
+        self.i+= 1
+        if self.i >4:
+            self.Mostrar.config(text= "Agrega la cantidad de billetes de 20000" )
+            self.Boton.config(state="disabled")
+            self.i=0
+            self.DivisionDelCapitalTotal()
+        else:
+            self.Mostrar.config(text= f"Agrega la cantidad de billetes de {Divisas[self.i]}: " )
+    
+    def DivisionDelCapitalTotal(self):
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+        SobresLlenos = []
+        for i in Json["Data"]:
+            if i["Limite"] == i["Saldo"] and i["Saldo"] > 0:
+                SobresLlenos.append(i["Nombre"])
+                print("El sobre está lleno, hay que eliminarlo")
+        Conteo = 0
+        for i in Json["Data"]: 
+            if i["Nombre"]!= "Seguro" and i["Nombre"] not in SobresLlenos:
+                Total = (i["Porcentaje"]/100)*self.Dinero
+                Rebajo = floor((Total / 1000))*1000
+                Rebajo=int(Rebajo)
+                self.GuardarElDinero(Rebajo,i["Nombre"])
+                Conteo += Rebajo 
+            else:
+                continue
+        ParaSeguro = self.Dinero - Conteo
+     
+        self.GuardarElDinero(ParaSeguro,"seguro")
+        self.Dinero = 0
+        self.EliminarWidgets()
+        Label(text = self.CantidadDeDineroALosSobres).grid(columnspan= 10,row = 3)
+        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+        self.Salida.grid(column=11,row= 0)
+    
+    CantidadDeDineroALosSobres = []
+
+    def GuardarElDinero(self,Cantidad, Sobre):
+        Sobre = Sobre.capitalize()
+        try:
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+            for i in Json["Data"]:
+                if i["Nombre"] == Sobre:
+                    self.CantidadDeDineroALosSobres.append([Sobre , Cantidad])
+                    i["Saldo"] += Cantidad 
+                    break
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
+                
+                json.dump(Json,file,indent=4)
+        except :
+            print("Error")
+
+    #SEGUNDO BOTON (Retirar)7
+    def RetirarInicio(self):
+        self.EliminarWidgets()
+        self.Explicacion = Label(self.Ventana,text="Cuanto quieres retirar")
+        self.Explicacion.grid(columnspan=10,row=3)
+        
+        self.Cantidad = Entry(self.Ventana)
+        self.Cantidad.grid(columnspan=10,row=4)
+        
+        Label(self.Ventana,text="De que sobre quieres retirar").grid(columnspan=10,row=0)
+        self.Sobre = Entry(self.Ventana)
+        self.Sobre.grid(columnspan=10,row=1)
+
+        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+        self.Salida.grid(column=11,row= 0)
+
+        Listo= Button(self.Ventana,text="Aceptar",command=lambda:self.Sacar()).grid(column=5,row=6)
+    
+    def Sacar(self):
+        Cantidad = self.Cantidad.get()
+        Sobre = self.Sobre.get()
+        Cantidad=int(Cantidad)
+        Sobre = Sobre.capitalize()
+        try:
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+            for i in Json["Data"]:
+                if i["Nombre"] == Sobre:
+                    if i["Saldo"] - Cantidad < 0:
+                        Texto= "Saldo insuficiente"
+                    else:
+                        i["Saldo"] -= Cantidad 
+                        Texto = "Operacion realizada con exito"
+                    break
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
+                json.dump(Json,file,indent=4)
+            self.EliminarWidgets()
+            Label(self.Ventana,text=Texto).grid(columnspan=10,row=3)
+            self.Ventana.after(3000, self.Inicio)
+            
+        except :
+            print("Error")
+
+    #Tercer Boton (Balance)
+    def Balance(self):
+        self.EliminarWidgets()
+        label = Label(self.Ventana,text="Escribe el nombre de algun sobre al que quieres \nconsultar el saldo de aca abajo")
+        label.grid(columnspan=10,row=1)
+        self.EleccionSobre = Entry(self.Ventana)
+        self.EleccionSobre.grid(columnspan=10,row=5)
+        Boton = ttk.Button(self.Ventana,text="Revisar",command= lambda:self.BalanceConfiguracion())
+        Boton.grid(columnspan=10,row=6)
+        Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+        Salida.grid(column=9,row= 6) 
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+        Columna = 5
+        for i in Json["Data"]:
+            Label(self.Ventana,text=i["Nombre"]).grid(column=Columna,row= 2)
+            Columna +=1
+        
+    def BalanceConfiguracion(self):
+        Sobre = self.EleccionSobre.get()
+        Sobre = Sobre.capitalize()
+        try:
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+            Texto= "Error: Sobre no encontrado"
+            for i in Json["Data"]:
+                if i["Nombre"] == Sobre:
+                    Cantidad = i["Saldo"]
+                    Texto = f"El sobre {Sobre.lower()} cuenta con {Cantidad}"
+                    break 
+            self.EliminarWidgets()
+        except :
+            Texto= "Error: Inesperado,contacte con el programador"
+
+        Label(self.Ventana,text=Texto).grid(columnspan=10,row=2)
+        self.Ventana.after(3000, self.Inicio)
+
+    #Cuarto Boton (OpcionesDeSobres)
+    def OpcionesDeSobres(self):
+        self.EliminarWidgets()
+        self.MenuSobresOp1= ttk.Button(text="Crear Sobre",command=lambda:self.PedirDatosParaElSobre())
+        self.MenuSobresOp1.grid(column=2,row=0)
+        self.MenuSobresOp2= ttk.Button(text="Modificar Sobres",command=lambda:self.EleccionDeSobreAModificar())
+        self.MenuSobresOp2.grid(column=2,row=2)
+        self.MenuSobresOp3= ttk.Button(text="Eliminar Sobres",command=lambda:self.EleccionDeSobreAEliminar())
+        self.MenuSobresOp3.grid(column=4,row=0)
+        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+        self.Salida.grid(column=5,row= 6) 
+    
+    #Primer Boton Sobres(Crear sobre)
+    def PedirDatosParaElSobre(self):
         self.EliminarWidgets()
         Label(self.Ventana,text="Agrega el nombre del nuevo sobre").grid(columnspan=10,row=0)
         self.NombreSobre = Entry(self.Ventana)
@@ -88,132 +228,180 @@ class Banco:
         self.LimiteSobre = Entry(self.Ventana)
         self.LimiteSobre.grid(columnspan=10,row=6)
         Listo= Button(self.Ventana,text="Aceptar",command=lambda:self.agregarSobre()).grid(column=5,row=8)
-        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.OpcionesDeSobres())
         self.Salida.grid(column=11,row= 0) 
 
-    def ComprobarLimite(self):
-        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json", "r") as file:
+    def agregarSobre(self):
+        sobre=self.NombreSobre.get()
+        sobre = sobre.capitalize()
+        porcentaje = self.PorcentajeSobre.get()
+        porcentaje=int(porcentaje)
+        limite = self.LimiteSobre.get()
+        limite = int(limite)
+        saldo = 0
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
             Datos = json.load(file)
+        Json={
+            "Nombre": sobre,
+            "Porcentaje" : porcentaje,
+            "Saldo": saldo,
+            "Limite":limite
+        }
+        Datos["Data"].append(Json)
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
+            json.dump(Datos,file,indent=4)
+        self.EliminarWidgets()
+        Label(self.Ventana,text=f"Sobre {sobre.lower()} fue creado con exito").grid(columnspan=10,row=2)
+        self.Ventana.after(3000, self.Inicio)
     
-        sobres_llenos = []
-        for i in Datos:
-            if i["Limite"] == i["Saldo"] and i["Saldo"] > 0:
-                sobres_llenos.append(i)
-                print("El sobre está lleno, hay que eliminarlo")
-    
-        return sobres_llenos
-    
-
-    def Guardar(self,Cantidad, Sobre):
-        Sobre = Sobre.capitalize()
-        try:
-            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
-                Json=json.load(file)
-            for i in Json:
-                if i["Nombre"] == Sobre:
-                    print(Sobre,Cantidad)
-                    i["Saldo"] += Cantidad 
-                    break
-            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
-                json.dump(Json,file,indent=4)
-        except :
-            print("Error")
-
-    def Sacar(self,Cantidad, Sobre):
-        Cantidad=int(Cantidad)
-        Sobre = Sobre.capitalize()
-        try:
-            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
-                Json=json.load(file)
-            for i in Json:
-                if i["Nombre"] == Sobre:
-                    if i["Saldo"] - Cantidad <= 0:
-                        Texto= "Saldo insuficiente"
-                    else:
-                        i["Saldo"] -= Cantidad 
-                        Texto = "Operacion realizada con exito"
-                    break
-            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
-                json.dump(Json,file,indent=4)
-            self.EliminarWidgets()
-            Label(self.Ventana,text=Texto).grid(columnspan=10,row=2)
-            self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
-            self.Salida.grid(column=11,row= 0) 
-            
-        except :
-            print("Error")
-
-    def DivisionInicio(self):
+    #Segundo Boton Sobres(Modificar sobre)
+    def EleccionDeSobreAModificar(self):
+        self.EliminarWidgets()
+        self.explicacion= Label(text="Que sobre quieres modificar")
+        self.explicacion.grid(columnspan=10,row=0)
         with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
                 Json=json.load(file)
-        Conteo = 0
-        for i in Json: 
-            if i["Nombre"]!= "Seguro":
-                Total = (i["Porcentaje"]/100)*self.Dinero
-                Rebajo = floor((Total / 1000))*1000
-                Rebajo=int(Rebajo)
-                self.Guardar(Rebajo,i["Nombre"])
-                Conteo += Rebajo 
-            else:
-                continue
-        ParaSeguro = self.Dinero - Conteo
-     
-        self.Guardar(ParaSeguro,"seguro")
-        self.Dinero = 0
-        self.Inicio()
+        Columna = 5
+        for i in Json["Data"]:
+            Label(self.Ventana,text=i["Nombre"]).grid(column=Columna,row= 2)
+            Columna +=1
+        self.Pedidor = Entry()
+        self.Pedidor.grid(columnspan=10,row= 3) 
+        self.Boton= ttk.Button(text="Listo",command=lambda:self.ObtencionDeModificacion())
+        self.Boton.grid(column=2,row=4)
+        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.OpcionesDeSobres())
+        self.Salida.grid(column=11,row= 0) 
 
-    def SumatoriaInicio(self):
-        Divisas= [1000, 2000, 5000, 10000, 20000]
+    def ObtencionDeModificacion(self):
+        SobreNombre = self.Pedidor.get()
+        SobreNombre = SobreNombre.capitalize()
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+            Datos = json.load(file) 
+        for i in Datos["Data"]:
+            if i["Nombre"] == SobreNombre:
+                Sobre = i
         self.EliminarWidgets()
-        self.Mostrar = Label(self.Ventana,text=f"Agrega la cantidad de billetes de {Divisas[self.i]}: ")
-        self.Mostrar.grid(columnspan=10,row=0)
-
-        self.entradaDinero = Entry(self.Ventana)
-        self.entradaDinero.grid(columnspan=10,row=2)
-
-        self.Boton = ttk.Button(self.Ventana,text="Aceptar", command=lambda:self.SumatoriaMain(Divisas=Divisas))
-        self.Boton.grid(columnspan=10,row=3)
-
+        Label(text =f"Que quieres modificar?\nNombre : {Sobre["Nombre"]} \nPorcentaje: {Sobre["Porcentaje"]} \nSaldo: {Sobre["Saldo"]} \nLimite: {Sobre["Limite"]}").grid(columnspan=10,row=0)
+        self.Modificacion = Entry()
+        self.Modificacion.grid(columnspan=10,row=3)
+        self.Boton= ttk.Button(text="Listo",command=lambda:self.ObtencionDelNuevoValorDeModificacion(SobreNombre,Datos))
+        self.Boton.grid(column=3,row=5)
         self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
         self.Salida.grid(column=11,row= 0) 
 
-    def SumatoriaMain(self,Divisas):
-        TotalDe = self.entradaDinero.get()
-        TotalDe = int(TotalDe)
-        Fin = TotalDe * Divisas[self.i]
-        self.Dinero += Fin
-        self.i+= 1
-        self.i
-        self.Dinero
-        if self.i >4:
-            self.Mostrar.config(text= "Agrega la cantidad de billetes de 20000" )
-            self.Boton.config(state="disabled")
-            self.i=0
-            self.DivisionInicio()
-        else:
-            self.Mostrar.config(text= f"Agrega la cantidad de billetes de {Divisas[self.i]}: " )
-        
-    def RetirarInicio(self):
+    def ObtencionDelNuevoValorDeModificacion(self, SobreNombre,Datos):
+        Modificacion = self.Modificacion.get()
+        Modificacion = Modificacion.capitalize()
         self.EliminarWidgets()
-        self.Explicacion = Label(self.Ventana,text="Cuanto quieres retirar")
-        self.Explicacion.grid(columnspan=10,row=0)
+        Valido = True
         
-        self.Cantidad = Entry(self.Ventana)
-        self.Cantidad.grid(columnspan=10,row=1)
-        
-        Label(self.Ventana,text="De que sobre quieres retirar").grid(columnspan=10,row=3)
-        self.Sobre = Entry(self.Ventana)
-        self.Sobre.grid(columnspan=10,row=4)
+        for i in Datos["Data"]:
+            ValoresDeSobres = list(i.keys())
+        if Modificacion in ValoresDeSobres:
+            Valido = True
+        else:
+            Valido = False
+        if Valido == True:
+            Label(text =f"Cual es el nuevo {Modificacion.lower()}?").grid(columnspan=10,row=0)
+            self.NuevoValor = Entry()
+            self.NuevoValor.grid(columnspan=10,row=3)
+            self.Boton= ttk.Button(text="Listo",command=lambda:self.GuardarCambiosSobre(SobreNombre,Datos,Modificacion))
+            self.Boton.grid(column=3,row=5)
+            self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
+            self.Salida.grid(column=11,row= 0) 
+        else:
+            self.ModificacionDeSobres()
+
+    def GuardarCambiosSobre(self,Sobre,Datos,Modificacion):
+        try:
+            Modificado = self.NuevoValor.get()
+            if Modificado.isdigit():
+                Modificado = int(Modificado)
+            else:
+                Modificado = Modificado.capitalize()  
+            for i in Datos["Data"]:
+                if i["Nombre"] == Sobre:
+                    i[Modificacion] = Modificado
+                    break
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
+                    json.dump(Datos,file,indent=4)
+            Texto = "Modificacion hecha con exito"
+        except :
+            Texto = "A ocurrido un error"
+        self.EliminarWidgets()
+        Label(text= Texto).grid(columnspan=10,row=3)
+        self.Ventana.after(2000, self.Inicio)
+
+    #Tercer Boton Sobres(Eliminar sobres)
+    def EleccionDeSobreAEliminar(self):
+        self.EliminarWidgets()
+        explicacion= Label(text="Que sobre quieres eliminar")
+        explicacion.grid(columnspan=10,row=0)
+        self.SobreAEliminar = Entry()
+        self.SobreAEliminar.grid(columnspan=10,row= 3) 
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+        Columna = 5
+        for i in Json["Data"]:
+            Label(self.Ventana,text=i["Nombre"]).grid(column=Columna,row= 2)
+            Columna +=1
+        Boton= ttk.Button(text="Listo",command=lambda:self.Eliminacion(Json))
+        Boton.grid(column = 7,row=4)
+        Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.OpcionesDeSobres())
+        Salida.grid(column=11,row= 0) 
+    
+    def Eliminacion(self,Json):
+        Sobre =self.SobreAEliminar.get()
+        Sobre = Sobre.capitalize()
+        NewJson= {"Data": []}
+        for i in Json["Data"]:
+            if i["Nombre"] != Sobre:
+                NewJson["Data"].append(i) 
+            else:
+                continue
+        with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","w") as file:
+                json.dump(NewJson,file,indent=4)
+        self.EliminarWidgets()
+        Label(text=f"El sobre {Sobre} ha sido eliminado con exito").grid(column = 0,row=3)
+        self.Ventana.after(3000, self.Inicio)
+
+    #Representacion Grafica
+    def PedidorDeDatosParaVizualizar(self):
+        self.EliminarWidgets()
+        Label(text="Elige el dato que quieres vizualizar").grid(columnspan=10,row=0)
+        self.DatoParaVer = Entry()
+        self.DatoParaVer.grid(columnspan=10,row=2)
+        self.Boton = ttk.Button(self.Ventana,text="Aceptar", command=lambda:self.Representacion())
+        self.Boton.grid(columnspan=10,row=4)
 
         self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
         self.Salida.grid(column=11,row= 0)
 
-        Listo= Button(self.Ventana,text="Aceptar",command=lambda:self.Retirar()).grid(column=5,row=6)
+    def Representacion(self):
+        DatoElegido = self.DatoParaVer.get()
+        DatoElegido = DatoElegido.capitalize()
+        if DatoElegido != "Nombre":
+            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
+                Json=json.load(file)
+            Sobre = []
+            DatoAVisualizar= []
+            for i in Json["Data"]:
+                Sobre.append(i["Nombre"])
+                DatoAVisualizar.append(i[DatoElegido])
+    
+            pl.bar(Sobre,DatoAVisualizar, color= "blue")
+            pl.title(f"Distribución de {DatoElegido.lower()} por categoría")
+            pl.xlabel("Categorías")
+            pl.ylabel(DatoElegido)
+            pl.show()
+        else:
+            Label(text="Dato no valido").grid(columnspan=10,row=3)
+        self.Ventana.after(2000, self.Inicio)
 
-    def Retirar(self):
-        Cantidad = self.Cantidad.get()
-        Sobre = self.Sobre.get()
-        self.Sacar(Cantidad, Sobre)
+    #Opciones Extra
+    def EliminarWidgets(self):
+        for widget in self.Ventana.winfo_children():
+            widget.destroy()    
 
     def ModoOscuroTK(self, Ventana):
         # Configuración general de la ventana
@@ -221,11 +409,11 @@ class Banco:
     
         # Configuración para elementos ttk
         estilo = ttk.Style()
-        estilo.theme_use('default')
+        estilo.theme_use("default")
         estilo.configure("TButton", background="#1e1e1e", foreground="#ffffff", borderwidth=1)
         estilo.map("TButton", 
-                   background=[('active', '#0d0d0d')],
-                   foreground=[('active', '#ffffff')])
+                   background=[("active", "#0d0d0d")],
+                   foreground=[("active", "#ffffff")])
     
         for Hijos in Ventana.winfo_children():
             if isinstance(Hijos, Toplevel):
@@ -242,41 +430,8 @@ class Banco:
                 elif isinstance(Hijos, Button):  # Botones ttk
                     Hijos.configure(style="TButton")
 
-    def Balance(self):
-        self.EliminarWidgets()
-        Label(self.Ventana,text="Escribe el sobre al que quieres consultar el saldo").grid(columnspan=10,row=1)
-        self.EleccionSobre = Entry(self.Ventana)
-        self.EleccionSobre.grid(columnspan=10,row=2)
-        ttk.Button(self.Ventana,text="Revisar",command= lambda:self.BalanceConfiguracion()).grid(column=4,columnspan=2,row=4)
+    
 
-    def BalanceConfiguracion(self):
-        Sobre = self.EleccionSobre.get()
-        Sobre = Sobre.capitalize()
-        try:
-            with open("C:/Users/orozc/Documents/VSC/Python/Sobres.json","r") as file:
-                Json=json.load(file)
-            Texto= "Error: Sobre no encontrado"
-            for i in Json:
-                if i["Nombre"] == Sobre:
-                    Cantidad = i["Saldo"]
-                    Texto = f"El sobre {Sobre} cuenta con {Cantidad}"
-                    break 
-            self.EliminarWidgets()
-        except :
-            Texto= "Error: Inesperado,contacte con el programador"
-
-        Label(self.Ventana,text=Texto).grid(columnspan=10,row=2)
-        self.Salida = ttk.Button(self.Ventana,text="Regresar",command=lambda:self.Inicio())
-        self.Salida.grid(column=11,row= 0) 
-        #Eleccion=self.EleccionSobre.get()
-        #Eleccion= Eleccion.lower()
-        #BaseDeDatos=""
-        #if Eleccion == "carro":
-        #    BaseDeDatos = "C:/Users/orozc/Documents/VSC/Python/Carro.txt"
-        #elif Eleccion == "ropa":
-        #    BaseDeDatos ="C:/Users/orozc/Documents/VSC/Python/Ropa.txt"
-        #elif Eleccion == "seguro":
-        #    BaseDeDatos ="C:/Users/orozc/Documents/VSC/Python/Seguro.txt"
 
 if __name__ == "__main__":
     Ventana = Tk()
