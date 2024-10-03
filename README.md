@@ -47,7 +47,7 @@ Este proyecto es una aplicación de escritorio desarrollada en Python utilizando
 3. Instala las dependencias necesarias:
 
    ```bash
-   pip install -r requirements.txt
+   pip install json
    ```
 
 4. Ejecuta la aplicación:
@@ -112,5 +112,3 @@ El archivo `Sobres.json` almacena los datos de cada sobre, como el nombre, porce
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo `LICENSE` para más detalles.
 ```
-
-Este `README` proporciona una introducción clara al proyecto, detalla las características principales, instrucciones de instalación, tecnologías utilizadas y futuras mejoras.
